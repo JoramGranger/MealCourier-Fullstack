@@ -1,20 +1,23 @@
 import { useRef, useState,useMemo, useEffect } from "react";
 import { View, Text, FlatList, Dimensions, useWindowDimensions, ActivityIndicator } from 'react-native';
-import BottomSheet from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import orders from '../../../assets/data/orders.json'
 import OrderItem from "../../components/OrderItem";
 import MapView, { Marker } from 'react-native-maps';
 import { Entypo } from "@expo/vector-icons";
-
-
-
+import { DataStore } from 'aws-amplify';
+import { Order } from '../../models';
 
 const OrdersScreen = () => {
 
-    
+    const [orders, setOrders] = useState([]);
     const bottomSheetRef = useRef(null);
     const { width, height } = useWindowDimensions();
-    const snapPoints = useMemo(() => ["12%", "95%"], []);
+    const snapPoints = useMemo(() => ["12%", "80%"], []);
+
+    useEffect(() => {
+        DataStore.query(Order, (order) => order.status("eq", "READY_FOR_PICKUP")).then(setOrders);
+    }, []);
 
 
     return ( 
@@ -29,8 +32,8 @@ const OrdersScreen = () => {
                         title={order.Restaurant.name} 
                         description={order.Restaurant.address}
                         coordinate={{
-                            latitude: order.Restaurant.lat,
-                            longitude: order.Restaurant.lng,
+                            latitude: order.Restaurant.latitude,
+                            longitude: order.Restaurant.longitude,
                     }}>
                         <View style={{backgroundColor: 'green', padding: 5, borderRadius: 20}}>
                             <Entypo name="shop" size={24} color="white"/>
@@ -48,7 +51,7 @@ const OrdersScreen = () => {
                         fontSize: 20, 
                         fontWeight: '600', 
                         letterSpacing: 0.5,
-                        paddingBottom: 5
+                        paddingBottom: 1
                         }}>You're Online
                     </Text>
 

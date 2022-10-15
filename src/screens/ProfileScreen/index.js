@@ -1,18 +1,20 @@
-import { View, Text, TextInput, StyleSheet, Button, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, Button, Alert, Pressable } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Auth, DataStore } from "aws-amplify";
-import { Courier } from "../../models";
+import { Courier, TransportationModes } from "../../models";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useNavigation } from "@react-navigation/native";
+import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 
 const Profile = () => {
   const { dbCourier, sub, setDbCourier } = useAuthContext();
 
   const [name, setName] = useState(dbCourier?.name || "");
-  const [address, setAddress] = useState(dbCourier?.address || "");
+  /* const [address, setAddress] = useState(dbCourier?.address || ""); */
   const [latitude, setlatitude] = useState(dbCourier?.latitude + "" || "0");
   const [longitude, setlongitude] = useState(dbCourier?.longitude + "" || "0");
+  const [transportationMode, setTransportationMode] = useState(TransportationModes.DRIVING);
 
   /* const { sub, setDbUser } = useAuthContext(); */
 
@@ -31,9 +33,7 @@ const Profile = () => {
     const courier = await DataStore.save(
       Courier.copyOf(dbCourier, (updated) => {
         updated.name = name;
-        updated.address = address;
-        updated.latitude = parseFloat(latitude);
-        updated.longitude = parseFloat(longitude);
+        updated.transportationMode = transportationMode;
       })
     );
     setDbCourier(courier);
@@ -44,10 +44,10 @@ const Profile = () => {
       const courier = await DataStore.save(
         new Courier({
           name,
-          address,
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
+          /* latitude: 0,
+          longitude: 0, */
           sub,
+          transportationMode,
         })
       );
       setDbCourier(courier);
@@ -65,25 +65,28 @@ const Profile = () => {
         placeholder="Name"
         style={styles.input}
       />
-      <TextInput
-        value={address}
-        onChangeText={setAddress}
-        placeholder="Address"
-        style={styles.input}
-      />
-      <TextInput
-        value={latitude}
-        onChangeText={setlatitude}
-        placeholder="latitudeitude"
-        style={styles.input}
-        keyboardType="numeric"
-      />
-      <TextInput
-        value={longitude}
-        onChangeText={setlongitude}
-        placeholder="Longitude"
-        style={styles.input}
-      />
+      <View style={{flexDirection: 'row'}}>
+        <Pressable onPress={() => setTransportationMode(TransportationModes.BICYCING)} style={{
+          backgroundColor: transportationMode === TransportationModes.BICYCING ? 'lightgreen' : 'white', 
+          margin: 10, 
+          padding: 10, 
+          borderWidth: 1, 
+          borderColor: 'grey',
+          borderRadius: 10
+          }}>
+          <MaterialIcons name="pedal-bike" size={40} color ="black" />
+        </Pressable>
+        <Pressable onPress={() => setTransportationMode(TransportationModes.DRIVING)} style={{
+          backgroundColor: transportationMode === TransportationModes.DRIVING ? 'lightgreen' : 'white',
+          margin: 10, 
+          padding: 10, 
+          borderWidth: 1, 
+          borderColor: 'grey',
+          borderRadius: 10
+          }}>
+          <FontAwesome5 name="car" size={40} color ="black" />
+        </Pressable>
+      </View>
       <Button onPress={onSave} title="Save" />
       <Text
         onPress={() => Auth.signOut()}
