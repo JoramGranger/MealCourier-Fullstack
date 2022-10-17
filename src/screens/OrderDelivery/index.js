@@ -9,6 +9,9 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useOrderContext } from "../../contexts/OrderContext";
 import BottomSheetDetails from "./BottomSheetDetails";
 import CustomMarker from "../../components/CustomerMarker";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { Courier } from "../../models";
+import { DataStore } from 'aws-amplify';
 
 
 const OrderDelivery = () => {
@@ -22,7 +25,7 @@ const OrderDelivery = () => {
     /* const [deliveryStatus, setDeliveryStatus] = useState(ORDER_STATUSES.READY_FOR_PICKUP); */
     /* const [isDriverClose, setIsDriverClose] = useState(false); */
 
-
+    const { dbCourier } = useAuthContext();
     
     const mapRef = useRef(null);
 
@@ -33,7 +36,20 @@ const OrderDelivery = () => {
 
     useEffect(() => {
         fetchOrder(id);
-    }, [id]);    
+    }, [id]); 
+    
+    useEffect(() => {
+        if(!driverLocation) {
+            return;
+        }
+        DataStore.save(
+            Courier.copyOf(dbCourier, (updated) => {
+                updated.latitude = driverLocation.latitude;
+                updated.longitude = driverLocation.longitude;
+        })
+      );
+    }, [driverLocation]);
+    
 
     useEffect(() => {
         /* const getDeliveryLocations =  */(async () => {

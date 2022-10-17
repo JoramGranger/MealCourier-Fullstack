@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, FlatList} from 'react-native';
+import { StyleSheet, LogBox} from 'react-native';
 import orders from './assets/data/orders.json';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
@@ -9,6 +9,9 @@ import { withAuthenticator} from 'aws-amplify-react-native';
 import awsconfig from './src/aws-exports';
 import AuthContextProvider from './src/contexts/AuthContext';
 import OrderContextProvider from './src/contexts/OrderContext';
+
+LogBox.ignoreLogs(["Setting a timer"]);
+
 
 Amplify.configure({
   ...awsconfig,
