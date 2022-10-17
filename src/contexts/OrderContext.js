@@ -20,39 +20,51 @@ const OrderContextProvider = ({children}) => {
         const fetchedOrder = await DataStore.query(Order,id);
         setOrder(fetchedOrder);
         DataStore.query(User, fetchedOrder.userID).then(setUser);
-       DataStore.query(OrderDish, (od) => od.orderID("eq", fetchedOrder.id)).then(setDishes);
-
-        
+       DataStore.query(OrderDish, (od) => od.orderID("eq", fetchedOrder.id)).then(setDishes);        
     }
 
-    const acceptOrder = () => {
+    useEffect(() => {
+        if(!order) {
+            return;
+        }
+        const subscription = DataStore.observe(Order, order.id).subscribe(({opType, element}) => {
+            if(opType === "UPDATE") {
+                /* console.warn("order update", element); */
+                fetchOrder(element.id);
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [order?.id]);
+
+    const acceptOrder = async () => {
         // update order, change status assign to the driver
-        DataStore.save(
+        const updatedOrder = await DataStore.save(
             Order.copyOf(order, (updated) => {
                 updated.status = "ACCEPTED"; // update to accepted
                 updated.Courier = dbCourier;
             })
-        ).then(setOrder);
+        );
+        setOrder(updatedOrder);
     };
 
-    const pickUpOrder = () => {
+    const pickUpOrder = async () => {
         // update order, change status assign to the driver
-        DataStore.save(
+        const updatedOrder = await DataStore.save(
             Order.copyOf(order, (updated) => {
                 updated.status = "PICKED_UP"; // update to accepted
-                updated.Courier = dbCourier;
             })
-        ).then(setOrder);
+        )
+        setOrder(updatedOrder);
     };
 
-    const completeOrder = () => {
+    const completeOrder = async () => {
         // update order, change status assign to the driver
-        DataStore.save(
+        const updatedOrder = await DataStore.save(
             Order.copyOf(order, (updated) => {
                 updated.status = "COMPLETED"; // update to accepted
-                updated.Courier = dbCourier;
             })
-        ).then(setOrder);
+        );
+        setOrder(updatedOrder);
     };
 
     return (

@@ -1,15 +1,11 @@
-import { useRef, useState,useMemo, useEffect } from "react";
-import { View, Text, FlatList, Dimensions, useWindowDimensions, ActivityIndicator, Pressable } from 'react-native';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { FontAwesome5, Fontisto, Entypo, MaterialIcons, Ionicons } from '@expo/vector-icons';
-import orders from '../../../assets/data/orders.json';
+import { useRef, useState, useEffect } from "react";
+import { View, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import styles from './styles';
-import MapView, { Marker } from 'react-native-maps';
+import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import MapViewDirections from "react-native-maps-directions";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { DataStore } from 'aws-amplify';
-import { Order, User, OrderDish } from '../../models';
 import { useOrderContext } from "../../contexts/OrderContext";
 import BottomSheetDetails from "./BottomSheetDetails";
 import CustomMarker from "../../components/CustomerMarker";
@@ -67,6 +63,15 @@ const OrderDelivery = () => {
         return foregroundSubscription;
     }, []);
 
+    const zoomInOnDriver = () => {
+        mapRef.current.animateToRegion({
+            latitude: driverLocation.latitude,
+            longitude: driverLocation.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01
+        });
+    };
+
     const restaurantLocation = {
         latitude: order?.Restaurant?.latitude, 
         longitude: order?.Restaurant?.longitude,
@@ -102,33 +107,14 @@ const OrderDelivery = () => {
                     strokeColor="#3fc060"
                     apikey={"AIzaSyDYj8QLP7gEVH2SchTLYZ0VkjQzC9teRBY"}
                     onReady={(result) => { 
-                        /* setIsDriverClose(result.distance <= 0.1) */
                         setTotalMinutes(result.duration);
                         setTotalKm(result.distance);
                     }}
                 />
                 <CustomMarker data={order.Restaurant} type="RESTAURANT" />
                 <CustomMarker data={user} type="USER" />
-                {/* <Marker
-                coordinate={{latitude: order.Restaurant.latitude, longitude: order.Restaurant.longitude}}
-                title={order.Restaurant.name}
-                description={order.Restaurant.address}
-                >
-                    <View style={{backgroundColor: 'green', padding: 5, borderRadius: 20}}>
-                        <Entypo name="shop" size={30} color="white"/>
-                    </View>                    
-                </Marker>
-                <Marker
-                coordinate={deliveryLocation}
-                title={user?.name}
-                description={user?.address}
-                > 
-                    <View style={{backgroundColor: 'green', padding: 5, borderRadius: 20}}>
-                        <MaterialIcons name="restaurant" size={30} color="white"/>
-                    </View>                   
-                </Marker> */}
             </MapView>
-            <BottomSheetDetails totalKm={totalKm} totalMinutes={totalMinutes}/>
+            <BottomSheetDetails totalKm={totalKm} totalMinutes={totalMinutes} onAccepted={zoomInOnDriver} />
             {order.status === "READY_FOR_PICKUP" && (
                 <Ionicons 
                 onPress={() => navigation.goBack()}
